@@ -28,7 +28,7 @@ from flask import (
 )
 
 from rooms.Config import Config, init_oauth
-from rooms.Models import db, get_db_connection, User, SSO_User
+from rooms.Models import db, get_db_connection, User, SSO_User, Room
 
 # ── App Initialisation ────────────────────────────────────────────────────────
 load_dotenv()
@@ -222,11 +222,95 @@ def google_callback():
 # ─────────────────────────────────────────────────────────────────────────────
 @app.route("/dashboard")
 def dashboard():
-    """Main chat room page – requires login."""
+    """Main dashboard page."""
     if "user_id" not in session:
         flash("Please log in first ❗", "error")
         return redirect(url_for("login"))
-    return render_template("index.html")
+    
+    # Get initial list of rooms
+    rooms = Room.query.order_by(Room.created_at.desc()).all()
+    return render_template("index.html", rooms=rooms)
+
+
+# ── Room API ──────────────────────────────────────────────────────────────────
+
+@app.route("/api/rooms", methods=["GET"])
+def get_rooms():
+    """Fetch rooms with search and filtering."""
+    if "user_id" not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    search_query = request.args.get("search", "").strip()
+    
+    query = Room.query
+    if search_query:
+        query = query.filter(Room.name.ilike(f"%{search_query}%") | 
+                           Room.description.ilike(f"%{search_query}%"))
+    
+    rooms = query.order_by(Room.created_at.desc()).all()
+    return jsonify([room.to_dict() for room in rooms])
+
+
+@app.route("/api/rooms", methods=["POST"])
+def create_room():
+    """Create a new room."""
+    if "user_id" not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "Invalid data"}), 400
+    
+    name = data.get("name", "").strip()
+    description = data.get("description", "").strip()
+    whatsapp_link = data.get("whatsapp_link", "").strip()
+    password = data.get("password", "").strip()
+    
+    if not all([name, whatsapp_link, password]):
+        return jsonify({"error": "Missing required fields"}), 400
+    
+    if len(password) != 6 or not password.isdigit():
+        return jsonify({"error": "Password must be a 6-digit number"}), 400
+
+    # Determine creator type (this is a bit of a hack since session structure differs)
+    # If session has 'username', it's likely a local user.
+    creator_type = "local" if "username" in session else "sso"
+    
+    try:
+        new_room = Room(
+            name=name,
+            description=description,
+            whatsapp_link=whatsapp_link,
+            password=password,
+            creator_id=session["user_id"],
+            creator_type=creator_type
+        )
+        db.session.add(new_room)
+        db.session.commit()
+        return jsonify({"success": True, "room": new_room.to_dict()})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/rooms/join", methods=["POST"])
+def join_room():
+    """Verify password and return WhatsApp link."""
+    if "user_id" not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    data = request.get_json()
+    room_id = data.get("room_id")
+    password = data.get("password", "").strip()
+    
+    room = Room.query.get(room_id)
+    if not room:
+        return jsonify({"error": "Room not found"}), 404
+        
+    if room.password == password:
+        return jsonify({"success": True, "link": room.whatsapp_link})
+    else:
+        return jsonify({"error": "Incorrect password"}), 403
 
 
 # ─────────────────────────────────────────────────────────────────────────────

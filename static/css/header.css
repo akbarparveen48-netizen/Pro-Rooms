@@ -1,69 +1,52 @@
-@import url('https://fonts.googleapis.com/css2?family=Aladin&display=swap');
-
-body {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    background-color: #202C33;
-}
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&display=swap');
 
 .menu-bar {
-    position: relative;
+    position: fixed;
+    top: 0;
+    left: 0;
     width: 100%;
-    height: 80px;
-    background: #10191E;
+    height: 70px;
+    background: rgba(16, 25, 30, 0.8);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
+    padding: 0 30px;
     box-sizing: border-box;
+    z-index: 1000;
 }
 
-/* Center text */
 .menu-bar p {
-    font-family: "Aladin", system-ui;
+    font-family: "Outfit", sans-serif;
     font-weight: 700;
-    font-style: normal;
-    font-size: 50px;
+    font-size: 24px;
     margin: 0;
     color: white;
-    text-transform: capitalize;
-    text-align: center;
-    flex: 1;
-    letter-spacing: 5px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
 }
 
-/* Right side icons */
-.menu-bar .avatar,
-.menu-bar .setting {
-    width: 40px;
-    height: 40px;
-    object-fit: contain;
-    cursor: pointer;
-}
-
-/* Align the right icons properly */
 .menu-bar .avatar {
-    margin-right: 40px;
-    margin-top: 5px;
-    width: 65px;
-    height: 65px;
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    border: 2px solid var(--primary, #5865F2);
+    object-fit: cover;
+    cursor: pointer;
+    transition: transform 0.3s;
 }
 
-.menu-bar .setting {
-    margin-right: 10px;
-    width: 55px;
-    height: 55px;
+.menu-bar .avatar:hover {
+    transform: scale(1.1);
 }
 
-/* Optional: make responsive */
 @media (max-width: 600px) {
-    .menu-bar p {
-        font-size: 28px;
+    .menu-bar {
+        padding: 0 15px;
     }
 
-    .menu-bar .avatar,
-    .menu-bar .setting {
-        width: 30px;
-        height: 30px;
+    .menu-bar p {
+        font-size: 18px;
     }
 }

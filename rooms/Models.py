@@ -77,3 +77,29 @@ class User(db.Model):
 
     def __repr__(self):
         return f"<User {self.username}>"
+
+
+class Room(db.Model):
+    """Stores information about student/pro rooms (WhatsApp group links)."""
+
+    __tablename__ = "rooms"
+
+    id            = db.Column(db.Integer, primary_key=True)
+    name          = db.Column(db.String(100), nullable=False)
+    description   = db.Column(db.Text, nullable=True)
+    whatsapp_link = db.Column(db.String(500), nullable=False)
+    password      = db.Column(db.String(6), nullable=False)  # 6-digit password
+    # Linking to users is tricky since we have two types. 
+    # For now, we'll store creator_info as a string or use two optional FKs.
+    creator_id    = db.Column(db.Integer, nullable=False)
+    creator_type  = db.Column(db.String(20), nullable=False) # 'local' or 'sso'
+    created_at    = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    def to_dict(self):
+        return {
+            "id":          self.id,
+            "name":        self.name,
+            "description": self.description,
+            "created_at":  self.created_at.isoformat(),
+            "creator_type": self.creator_type
+        }
