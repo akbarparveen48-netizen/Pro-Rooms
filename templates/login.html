@@ -15,8 +15,9 @@
         <p>Welcome back! <br /> Login to your account</p>
         <span class="motivate"> Let's enter again , share the creativity's </span>
         <form action="/login" method="post">
-            <input type="text" placeholder="Your username or email">
-            <input type="password" placeholder="Your password">
+            <!-- name="identifier" matches what app.py reads -->
+            <input type="text"     name="identifier" placeholder="Your username or email" required>
+            <input type="password" name="password"   placeholder="Your password" required>
 
             <div class="form-footer">
                 <div class="remember-me">
